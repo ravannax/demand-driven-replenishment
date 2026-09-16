@@ -81,41 +81,71 @@ def apply_replenishment(
     shipped_col: str = "embarcados",
     supplier_col: str = "cod_proveedor",
     unit_cost_col: str = "costo_unitario",
+    discontinued_col: str = "descontinuado",
     buffer_months: float = 3.0,
     plaza_prefixes: tuple[str, ...] = ("LOC", "PLZ", "URB"),
 ) -> pd.DataFrame:
-    """Agrega columnas de decisión de compra al dataframe de SKUs."""
+    """Agrega columnas de decisión de compra al dataframe de SKUs.
+
+    SKUs descontinuados quedan con cantidad_a_comprar = 0 (no se reponen).
+    """
     out = df.copy()
 
-    qtys = []
-    modes = []
-    for _, row in out.iterrows():
-        plaza = is_plaza_supplier(row.get(supplier_col, ""), plaza_prefixes)
-        if plaza:
-            q = qty_plaza(row.get(demand_avg_col, 0), row.get(stock_col, 0))
-            modes.append("plaza")
-        else:
-            q = qty_standard(
-                demand=row.get(demand_median_col, 0),
-                lead_time=row.get(lead_col, 0),
-                stock=row.get(stock_col, 0),
-                inbound=row.get(inbound_col, 0),
-                ordered=row.get(ordered_col, 0),
-                shipped=row.get(shipped_col, 0),
-                buffer_months=buffer_months,
-            )
-            modes.append("estandar")
-        qtys.append(q)
+    suppliers = out[supplier_col].fillna("").astype(str) if supplier_col in out.columns else pd.Series("", index=out.index)
+    plaza_mask = suppliers.str.upper().str.startswith(plaza_prefixes)
 
-    out["modo_compra"] = modes
-    out["cantidad_a_comprar"] = qtys
-    out["stock_meses"] = [
-        stock_months(r.get(stock_col, 0), r.get(demand_median_col, 0)) for _, r in out.iterrows()
-    ]
-    out["transito_meses"] = [
-        transit_months(r.get(ordered_col, 0), r.get(shipped_col, 0), r.get(demand_median_col, 0))
-        for _, r in out.iterrows()
-    ]
+    demand_med = (
+        out[demand_median_col].fillna(0).astype(float)
+        if demand_median_col in out.columns
+        else pd.Series(0.0, index=out.index)
+    )
+    demand_avg = (
+        out[demand_avg_col].fillna(0).astype(float)
+        if demand_avg_col in out.columns
+        else pd.Series(0.0, index=out.index)
+    )
+    lead = (
+        out[lead_col].fillna(0).astype(float)
+        if lead_col in out.columns
+        else pd.Series(0.0, index=out.index)
+    )
+    stock = (
+        out[stock_col].fillna(0).astype(float)
+        if stock_col in out.columns
+        else pd.Series(0.0, index=out.index)
+    )
+    inbound = (
+        out[inbound_col].fillna(0).astype(float)
+        if inbound_col in out.columns
+        else pd.Series(0.0, index=out.index)
+    )
+    ordered = (
+        out[ordered_col].fillna(0).astype(float)
+        if ordered_col in out.columns
+        else pd.Series(0.0, index=out.index)
+    )
+    shipped = (
+        out[shipped_col].fillna(0).astype(float)
+        if shipped_col in out.columns
+        else pd.Series(0.0, index=out.index)
+    )
+
+    stock_ajustado = stock + inbound - demand_med * lead
+    qty_std = np.maximum(0.0, demand_med * (lead + buffer_months) - stock_ajustado - ordered - shipped)
+    qty_plz = np.maximum(0.0, demand_avg * 2.0 - stock)
+
+    out["modo_compra"] = np.where(plaza_mask, "plaza", "estandar")
+    out["cantidad_a_comprar"] = np.where(plaza_mask, qty_plz, qty_std)
+
+    if discontinued_col in out.columns:
+        discontinued = out[discontinued_col].fillna(False).astype(bool)
+        out.loc[discontinued, "cantidad_a_comprar"] = 0.0
+        out.loc[discontinued, "modo_compra"] = "descontinuado"
+
+    med = demand_med.replace(0, np.nan)
+    out["stock_meses"] = (stock / med).fillna(stock)
+    out["transito_meses"] = ((ordered + shipped) / med).fillna(ordered + shipped)
+
     if unit_cost_col in out.columns:
         out["costo_total"] = out["cantidad_a_comprar"] * out[unit_cost_col].fillna(0)
     else:

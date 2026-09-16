@@ -1,16 +1,22 @@
 # Desplegar la demo en Streamlit Community Cloud
 
 Streamlit Community Cloud toma tu **repo público de GitHub** y levanta una app web gratuita.
-No reemplaza al repo: es un **link extra** (tipo `https://share.streamlit.io/...` o `*.streamlit.app`) para que reclutadores jueguen con el dashboard sin instalar nada.
+No reemplaza al repo: es un **link extra** para que reclutadores jueguen con el dashboard sin instalar nada.
 
-## Pasos
+## Demo publicada
 
-1. Publica este repositorio en GitHub (público).
-2. Entra a [https://share.streamlit.io](https://share.streamlit.io) con tu cuenta de GitHub.
-3. **New app** → elige el repo `demand-driven-replenishment`.
-4. Main file path: `app/streamlit_app.py`
-5. Python version: 3.11 (si te lo pide).
-6. Deploy.
+https://ravannax-demand-driven-replenishment-appstreamlit-app-bjfgz0.streamlit.app/
+
+Main file: `app/streamlit_app.py` · Repo: `ravannax/demand-driven-replenishment`.
+
+Tras un `git push` a `main`, Streamlit Cloud suele redesplegar solo (o “Reboot app” en el panel).
+
+## Redesplegar / crear otra app
+
+1. [https://share.streamlit.io](https://share.streamlit.io) con tu GitHub.
+2. **New app** → repo `demand-driven-replenishment`.
+3. Main file path: `app/streamlit_app.py`
+4. Python: 3.11 (si lo pide) · Deploy.
 
 ## Local (sin cloud)
 
@@ -21,7 +27,9 @@ python -m src.pipeline
 streamlit run app/streamlit_app.py
 ```
 
+En la sidebar: **colchón** y **corte** recalculan al instante; el botón regenera solo los sintéticos (seed).
+
 ## Qué poner en el CV
 
-- Link al **repo** (código + docs).
+- Link al **repo** (código + docs + CI).
 - Link a la **app Streamlit** (demo clicable).

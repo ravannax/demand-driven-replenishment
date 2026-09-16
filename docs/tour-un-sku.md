@@ -33,3 +33,12 @@ Si el proveedor empieza con `LOC` / `PLZ` / `URB`:
 `cantidad = promedio_12m * 2 - stock`
 
 Porque el reabastecimiento es rápido y no necesitas proyectar un lead largo.
+
+### Excepción descontinuado
+
+Si el SKU tiene `descontinuado = True`, la cantidad a comprar es **0** aunque la fórmula diga otra cosa (no se reponen ítems fuera de catálogo).
+
+### Nota sobre `est_demanda`
+
+En el Tour del dashboard aparece una estimación mensual que promedia promedio 12m, promedio 6m y el run-rate de 28 días escalado a mes (`×30/28`).  
+La **compra estándar** sigue usando la **mediana 12m**, no esa estimación.

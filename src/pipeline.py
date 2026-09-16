@@ -44,6 +44,7 @@ def run_pipeline(
         "ventas_6m",
         "ventas_12m",
         "unidades_28d",
+        "unidades_28d_mensual",
         "est_demanda",
         "stock_total",
         "solicitados",

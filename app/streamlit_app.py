@@ -33,25 +33,25 @@ st.caption(
     "Demo con 100 SKUs ficticios. La misma lógica se aplicó en producción sobre un catálogo de más de 70.000 SKUs."
 )
 
+data_dir = ROOT / "data" / "synthetic"
+
 with st.sidebar:
     st.header("Parámetros")
     seed = st.number_input("Seed (reproducibilidad)", min_value=1, value=42, step=1)
     buffer = st.slider("Colchón (meses)", min_value=1.0, max_value=6.0, value=3.0, step=0.5)
     cutoff = st.slider("Corte mes comercial (día)", min_value=1, max_value=28, value=21)
-    if st.button("Regenerar datos + pipeline", type="primary"):
-        with st.spinner("Generando..."):
-            generate_all(seed=int(seed), out_dir=ROOT / "data" / "synthetic")
-            run_pipeline(cutoff_day=int(cutoff), buffer_months=float(buffer))
-        st.success("Listo")
+    regenerate = st.button("Regenerar datos sintéticos", type="primary")
+    st.caption(
+        "Colchón y corte se reapican al instante sobre los datos actuales. "
+        "Usa el botón solo si cambias el seed o quieres nuevos sintéticos."
+    )
 
-data_dir = ROOT / "data" / "synthetic"
-out_file = ROOT / "output" / "sugerido_compras.csv"
+if regenerate or not (data_dir / "products.csv").exists():
+    with st.spinner("Generando datos sintéticos..."):
+        generate_all(seed=int(seed), out_dir=data_dir)
 
-if not out_file.exists():
-    generate_all(seed=42, out_dir=data_dir)
-    run_pipeline()
-
-df = pd.read_csv(out_file)
+# Recalcular sugerido siempre con los parámetros del sidebar (100 SKUs → rápido)
+df = run_pipeline(cutoff_day=int(cutoff), buffer_months=float(buffer))
 summary = pd.read_csv(ROOT / "output" / "resumen.csv")
 
 c1, c2, c3, c4 = st.columns(4)
@@ -88,7 +88,11 @@ with tab2:
             "cantidad_a_comprar",
             "costo_total",
         ]
-    ]
+    ].copy()
+    for col in ("stock_total", "lead_time"):
+        show[col] = show[col].astype(int)
+    show["cantidad_a_comprar"] = show["cantidad_a_comprar"].round(1)
+    show["costo_total"] = show["costo_total"].round(0)
     st.dataframe(show, use_container_width=True, hide_index=True)
     st.download_button(
         "Descargar CSV del sugerido",
@@ -107,6 +111,7 @@ with tab3:
             {
                 "ABCI": str(row["abci"]),
                 "Modo compra": str(row["modo_compra"]),
+                "Descontinuado": bool(row.get("descontinuado", False)),
                 "Lead time (meses)": int(row["lead_time"]),
                 "Stock": int(row["stock_total"]),
                 "Solicitados": int(row["solicitados"]),
@@ -119,8 +124,8 @@ with tab3:
             {
                 "Mediana unidades 12m": round(float(row["unidades_mediana_12m"]), 2),
                 "Promedio unidades 12m": round(float(row["unidades_promedio_12m"]), 2),
-                "Unidades 28d": float(row["unidades_28d"]),
-                "Est. demanda": round(float(row["est_demanda"]), 2),
+                "Unidades 28d": round(float(row["unidades_28d"]), 2),
+                "Est. demanda (mensual)": round(float(row["est_demanda"]), 2),
                 "Stock meses": round(float(row["stock_meses"]), 2),
                 "Cantidad a comprar": round(float(row["cantidad_a_comprar"]), 2),
                 "Costo total": round(float(row["costo_total"]), 2),
@@ -128,7 +133,8 @@ with tab3:
         )
     st.info(
         "Si el modo es **estándar**: se cubre lead time + colchón, descontando stock y tránsito. "
-        "Si es **plaza**: objetivo simplificado de ~2 meses con promedio (proveedor rápido)."
+        "Si es **plaza**: objetivo simplificado de ~2 meses con promedio (proveedor rápido). "
+        "Si es **descontinuado**: no se sugiere compra."
     )
 
 with tab4:

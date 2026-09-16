@@ -6,7 +6,10 @@ Demo pública con **100 SKUs ficticios**, 3 locales y 12 meses de historia.
 La misma lógica se aplicó en un entorno real de control de gestión / supply chain sobre un catálogo de **más de 70.000 SKUs** (datos y nombres de esa empresa no están aquí por confidencialidad).
 
 [![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](#requisitos)
-[![Streamlit](https://img.shields.io/badge/demo-Streamlit-FF4B4B.svg)](docs/como-desplegar-streamlit.md)
+[![CI](https://github.com/ravannax/demand-driven-replenishment/actions/workflows/ci.yml/badge.svg)](https://github.com/ravannax/demand-driven-replenishment/actions/workflows/ci.yml)
+[![Streamlit](https://img.shields.io/badge/demo-Streamlit_Cloud-FF4B4B.svg)](https://ravannax-demand-driven-replenishment-appstreamlit-app-bjfgz0.streamlit.app/)
+
+**Demo en vivo:** [abrir dashboard](https://ravannax-demand-driven-replenishment-appstreamlit-app-bjfgz0.streamlit.app/)
 
 ---
 
@@ -17,6 +20,7 @@ La misma lógica se aplicó en un entorno real de control de gestión / supply c
 | Catálogo grande: no se puede decidir a ojo | Pipeline que resume demanda por SKU |
 | No todo el inventario importa igual | Clasificación **ABCI** (Pareto + inactivos) |
 | Pedir de más / de menos cuesta plata | **Sugerido de compras** con lead time, stock y tránsito |
+| SKUs que ya no se venden | Flag **descontinuado** → cantidad a comprar = 0 |
 | Hay que explicar el “por qué” | Docs y tour de 1 SKU “con peras y manzanas” |
 
 ---
@@ -37,7 +41,7 @@ La misma lógica se aplicó en un entorno real de control de gestión / supply c
 Datos sintéticos → KPIs (28d/6m/12m) → ABCI → Cantidad a comprar → Excel + Streamlit
 ```
 
-Detalle: [docs/arquitectura.md](docs/arquitectura.md) · Glosario: [docs/glosario.md](docs/glosario.md) · Tour numérico: [docs/tour-un-sku.md](docs/tour-un-sku.md)
+Detalle: [docs/arquitectura.md](docs/arquitectura.md) · [Reglas](docs/reglas-de-negocio.md) · [Glosario](docs/glosario.md) · [Tour](docs/tour-un-sku.md)
 
 ---
 
@@ -110,8 +114,21 @@ Proveedores “plaza” (reposición rápida): objetivo ≈ 2 meses con **promed
 
 ## Deploy de la demo
 
-Ver [docs/como-desplegar-streamlit.md](docs/como-desplegar-streamlit.md).  
-Streamlit Community Cloud publica una **app clicable** a partir de este repo (el repo sigue siendo la fuente del código).
+App publicada: https://ravannax-demand-driven-replenishment-appstreamlit-app-bjfgz0.streamlit.app/
+
+Cómo redesplegar o correr en local: [docs/como-desplegar-streamlit.md](docs/como-desplegar-streamlit.md).
+
+---
+
+## Reglas de negocio (resumen)
+
+Detalle en [docs/arquitectura.md](docs/arquitectura.md) y [docs/reglas-de-negocio.md](docs/reglas-de-negocio.md).
+
+- **ABCI:** Pareto sobre ventas 6m (S/A/B/C) + inactivos (`I6m` / `I12m`) y nuevos → C.
+- **Estándar:** `qty = demanda×(lead+colchón) − (stock+inbound−demanda×lead) − tránsito`.
+- **Plaza** (`LOC*` / `PLZ*` / `URB*`): `qty = promedio_12m×2 − stock`.
+- **Descontinuado:** siempre `qty = 0`.
+- **`est_demanda`:** promedio de (promedio 12m, promedio 6m, run-rate 28d escalado a mensual).
 
 ---
 
@@ -124,8 +141,9 @@ demand-driven-replenishment/
 ├── src/           # lógica testeable
 ├── tests/
 ├── docs/
-├── data/synthetic/
-└── output/
+├── .github/workflows/ci.yml
+├── data/synthetic/   # regenerable (no versionado)
+└── output/           # regenerable (no versionado)
 ```
 
 ---

@@ -11,6 +11,8 @@
 | **Mes comercial** | Mes de negocio que no empieza el día 1, sino en un corte (aquí: día 21). |
 | **Colchón (buffer)** | Meses extra de cobertura por si la demanda se adelanta o el barco se atrasa. |
 | **Compra plaza** | Proveedor local/rápido: fórmula más corta (~2 meses de stock). |
+| **Descontinuado** | SKU que ya no se compra: el motor fuerza cantidad a comprar = 0. |
+| **est_demanda** | Señal mensual = media de promedio 12m, 6m y run-rate 28d escalado a mes. No es la base de la compra estándar. |
 | **Seed** | Número que fija el generador de datos para que siempre salgan los mismos SKUs ficticios. |
 
 ## Escala

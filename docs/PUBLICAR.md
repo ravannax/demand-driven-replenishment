@@ -1,30 +1,27 @@
-# Publicar este repo en tu GitHub (`ravannax`)
+# Publicar / actualizar este repo en GitHub (`ravannax`)
 
-El entorno del agente **no puede crear** repositorios nuevos en tu cuenta (permiso `createRepository` bloqueado).
-El proyecto ya está listo en local; solo falta crearlo en GitHub y hacer push.
+El repositorio público ya existe:
 
-## Opción rápida (GitHub web)
+https://github.com/ravannax/demand-driven-replenishment
 
-1. Abre: https://github.com/new
-2. Owner: **ravannax**
-3. Repository name: **demand-driven-replenishment**
-4. Public
-5. **No** marques README / .gitignore / license (el repo ya los trae)
-6. Create repository
+Demo Streamlit:
 
-Luego, en la máquina donde tengas este proyecto:
+https://ravannax-demand-driven-replenishment-appstreamlit-app-bjfgz0.streamlit.app/
+
+## Actualizar código
 
 ```bash
 cd /ruta/a/demand-driven-replenishment
-git remote add origin https://github.com/ravannax/demand-driven-replenishment.git
-git push -u origin main
+git add -A
+git commit -m "tu mensaje"
+git push origin main
 ```
 
-Si me avisas cuando el repo vacío exista, puedo intentar el `git push` desde aquí.
+Streamlit Cloud redespliega desde `main` automáticamente (o usa Reboot en el panel).
 
-## Después: demo Streamlit
+## Si partieras de cero (referencia)
 
-1. https://share.streamlit.io → New app
-2. Repo: `ravannax/demand-driven-replenishment`
-3. File: `app/streamlit_app.py`
-4. Deploy → copia el link `*.streamlit.app` a tu CV junto al link del repo
+1. https://github.com/new → owner **ravannax**, nombre **demand-driven-replenishment**, público, sin README.
+2. `git remote add origin https://github.com/ravannax/demand-driven-replenishment.git`
+3. `git push -u origin main`
+4. Conectar en [share.streamlit.io](https://share.streamlit.io) → `app/streamlit_app.py`

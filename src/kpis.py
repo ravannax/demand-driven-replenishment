@@ -71,10 +71,12 @@ def build_sku_kpis(
     out = k12.join(k6, how="outer").join(u28, how="left").join(u2956, how="left").join(last_sale, how="left")
     out = out.fillna({"unidades_28d": 0, "unidades_29_56d": 0}).reset_index()
 
-    # Estimación de demanda = promedio de 3 señales (12m avg, 6m avg, 28d)
-    # (en el original eran 4 ventanas; aquí adaptamos a 12 meses de historia)
+    # Estimación de demanda mensual = promedio de 3 señales en la misma unidad:
+    # promedio 12m, promedio 6m y run-rate de 28d escalado a ~30 días.
+    # (Antes se mezclaba unidades_28d totales con promedios mensuales.)
+    out["unidades_28d_mensual"] = out["unidades_28d"] * (30.0 / 28.0)
     out["est_demanda"] = out[
-        ["unidades_promedio_12m", "unidades_promedio_6m", "unidades_28d"]
+        ["unidades_promedio_12m", "unidades_promedio_6m", "unidades_28d_mensual"]
     ].mean(axis=1)
 
     return out
