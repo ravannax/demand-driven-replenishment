@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+.env
+.ipynb_checkpoints/
+output/*
+!output/.gitkeep
+data/synthetic/*
+!data/synthetic/.gitkeep
+!data/synthetic/README.md
+.DS_Store
+*.egg-info/
+dist/
+build/
+.streamlit/secrets.toml
